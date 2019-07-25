@@ -57,7 +57,7 @@ public class Creature : Area
 
         SpatialMaterial material = new SpatialMaterial();
 
-        float brightness = this.mass * 0.5f;
+        float brightness = (this.mass / 2.0f) * 1.0f;
         material.AlbedoColor = new Color(brightness, brightness, brightness);
         mesh.Material = material;
     }

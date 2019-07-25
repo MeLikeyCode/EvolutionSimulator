@@ -42,10 +42,11 @@ public class GUI : Control
             return;
         }
         int tempInt;
-        if (string.IsNullOrEmpty(numberInput.Text) || !int.TryParse(massInput.Text, out tempInt))
+        if (string.IsNullOrEmpty(numberInput.Text) || !int.TryParse(numberInput.Text, out tempInt))
         {
             return;
         }
+
 
         float mass = massInput.Text.ToFloat();
         float radius = radiusInput.Text.ToFloat();

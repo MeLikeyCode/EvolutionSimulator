@@ -10,16 +10,7 @@ public class Main : Spatial
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
-        // create some Creatures
         creatureGenerator_ = (PackedScene)GD.Load("res://Scenes/Creature.tscn");
-        for (int i = 0; i < 15; i++)
-        {
-            Spatial creatureRoot = (Spatial)creatureGenerator_.Instance();
-            Creature creature = (Creature)creatureRoot.GetNode("Area");
-            creatureRoot.RemoveChild(creature);
-            creatureRoot.QueueFree();
-            this.AddChild(creature);
-        }
 
         // create some initial food
         foodGenerator_ = (PackedScene)GD.Load("res://Scenes/Food.tscn");
@@ -32,7 +23,7 @@ public class Main : Spatial
             food.Translation = new Vector3(randomX,0,randomZ);
         }
 
-        // periodically spanw food
+        // periodically spawn food
         foodTimer_ = new Timer();
         this.AddChild(foodTimer_);
         foodTimer_.WaitTime = 1;
@@ -40,7 +31,7 @@ public class Main : Spatial
         foodTimer_.Start();
 
         // connect gui
-        GUI gui = this.GetNode("GUI").GetNode("");
+        GUI gui = (GUI)this.GetNode("GUI");
         gui.Connect("CreateCreatures",this,"OnCreateCreatures");
 
     }
@@ -63,7 +54,6 @@ public class Main : Spatial
             this.AddChild(creature);
 
             creature.SetProperties(mass,radius);
-            GD.Print("creature created"); // TODO remove
         }
     }
 

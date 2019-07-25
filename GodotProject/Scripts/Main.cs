@@ -40,7 +40,7 @@ public class Main : Spatial
         foodTimer_.Start();
 
         // connect gui
-        GUI gui = (GUI)this.GetNode("GUI");
+        GUI gui = this.GetNode("GUI").GetNode("");
         gui.Connect("CreateCreatures",this,"OnCreateCreatures");
 
     }

@@ -1,0 +1,89 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Scripts/GUI.cs" type="Script" id=1]
+
+[sub_resource type="StyleBoxFlat" id=1]
+
+[node name="Control" type="Control"]
+margin_right = 40.0
+margin_bottom = 40.0
+script = ExtResource( 1 )
+
+[node name="CheckButton" type="CheckButton" parent="."]
+margin_right = 76.0
+margin_bottom = 40.0
+pressed = true
+text = "Show Gui: "
+
+[node name="Panel" type="Panel" parent="."]
+margin_left = 10.0
+margin_top = 46.0
+margin_right = 323.0
+margin_bottom = 311.0
+
+[node name="Button" type="Button" parent="Panel"]
+margin_left = 13.0
+margin_top = 21.0
+margin_right = 192.0
+margin_bottom = 41.0
+text = "Delete Selected Creatures"
+
+[node name="Panel2" type="Panel" parent="Panel"]
+margin_left = 13.0
+margin_top = 55.0
+margin_right = 296.0
+margin_bottom = 245.0
+custom_styles/panel = SubResource( 1 )
+
+[node name="Label" type="Label" parent="Panel/Panel2"]
+margin_left = 10.0
+margin_top = 12.0
+margin_right = 156.0
+margin_bottom = 26.0
+text = "Create New Creature(s)"
+
+[node name="Label2" type="Label" parent="Panel/Panel2"]
+margin_left = 35.0
+margin_top = 47.0
+margin_right = 181.0
+margin_bottom = 61.0
+text = "Mass: "
+
+[node name="Label3" type="Label" parent="Panel/Panel2"]
+margin_left = 36.0
+margin_top = 78.0
+margin_right = 182.0
+margin_bottom = 92.0
+text = "Radius: "
+
+[node name="Label4" type="Label" parent="Panel/Panel2"]
+margin_left = 37.0
+margin_top = 120.0
+margin_right = 183.0
+margin_bottom = 134.0
+text = "Number to Create: "
+
+[node name="Button2" type="Button" parent="Panel/Panel2"]
+margin_left = 208.0
+margin_top = 156.0
+margin_right = 261.0
+margin_bottom = 176.0
+text = "Create"
+
+[node name="LineEdit" type="LineEdit" parent="Panel/Panel2"]
+margin_left = 95.0
+margin_top = 43.0
+margin_right = 153.0
+margin_bottom = 67.0
+
+[node name="LineEdit2" type="LineEdit" parent="Panel/Panel2"]
+margin_left = 97.0
+margin_top = 74.0
+margin_right = 155.0
+margin_bottom = 98.0
+
+[node name="LineEdit3" type="LineEdit" parent="Panel/Panel2"]
+margin_left = 163.0
+margin_top = 115.0
+margin_right = 221.0
+margin_bottom = 139.0

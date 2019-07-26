@@ -7,4 +7,5 @@ public class Utilities
         float fraction = percentage / 100;
         return value * (float)GD.RandRange(1 - fraction,1 + fraction);
     }
+
 }

@@ -53,9 +53,8 @@
     <Compile Include="Scripts\Creature.cs" />
     <Compile Include="Scripts\Food.cs" />
     <Compile Include="Scripts\GUI.cs" />
-    <Compile Include="Scripts\Main.cs" />
-    <Compile Include="Scripts\Test.cs" />
     <Compile Include="Scripts\Utilities.cs" />
+    <Compile Include="Scripts\World.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,10 +1,10 @@
 using Godot;
 using System;
 
-public class Main : Spatial
+public class World : Spatial
 {
-    float height = 50;
-    float width = 50;
+    public float height = 100;
+    public float width = 100;
 
     PackedScene creatureGenerator_;
     PackedScene foodGenerator_;
@@ -17,6 +17,8 @@ public class Main : Spatial
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
+        Engine.TimeScale = 5;
+
         creatureGenerator_ = (PackedScene)GD.Load("res://Scenes/Creature.tscn");
 
         // create some initial food
@@ -40,6 +42,8 @@ public class Main : Spatial
         // connect gui
         GUI gui = (GUI)this.GetNode("GUI");
         gui.Connect("CreateCreatures",this,"OnCreateCreatures");
+
+        gui.Connect("UpdateFoodSpawnRate",this,"OnUpdateFoodSpawnRate");
 
     }
 
@@ -101,6 +105,7 @@ public class Main : Spatial
             Creature creature = (Creature)creatureRoot.GetNode("Area");
             creatureRoot.RemoveChild(creature);
             creatureRoot.QueueFree();
+            creature.world = this;
             this.AddChild(creature);
 
             creature.SetProperties(mass,radius);
@@ -114,5 +119,9 @@ public class Main : Spatial
         float randomX = (float)GD.RandRange(-this.width/2.0,this.width/2.0);
         float randomZ = (float)GD.RandRange(-this.height/2.0,this.height/2.0);
         food.Translation = new Vector3(randomX,0,randomZ);
+    }
+
+    void OnUpdateFoodSpawnRate(float rate){
+        this.foodTimer_.WaitTime = rate;
     }
 }

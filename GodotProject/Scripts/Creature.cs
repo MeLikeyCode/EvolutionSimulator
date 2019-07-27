@@ -3,6 +3,7 @@ using System;
 
 public class Creature : Area
 {
+    public World world;
     public float radius;
     public float mass;
     public float max_energy;
@@ -11,9 +12,16 @@ public class Creature : Area
     Timer replicationTimer_;
     PackedScene creatureGenerator_;
 
+    public bool ateAFood = false;
+
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
+        if (world == null)
+        {
+            GD.Print("ERROR: Creature's 'world' attribute must be set before it enters scene tree.");
+        }
+
         float mass = 2;
         float radius = 2;
         SetProperties(mass, radius);
@@ -74,20 +82,33 @@ public class Creature : Area
         this.current_energy -= delta * mass * 2;
 
         // if touching "wall", rotate towards center
-        float BOUND = 30;
-        bool touchingWall = this.Translation.x > BOUND || this.Translation.x < -BOUND || this.Translation.z > BOUND || this.Translation.z < -BOUND;
-        if (touchingWall){
-            this.LookAt(new Vector3(0,0,0),new Vector3(0,1,0));
+        if (world == null){
+            GD.Print("ERROR: Creature's 'world' attribute is null!");
+        }
+        float H_BOUND = world.width / 2.0f;
+        float V_BOUND = world.height / 2.0f;
+        bool touchingHWall = this.Translation.x > H_BOUND || this.Translation.x < -H_BOUND;
+        bool touchingVWall = this.Translation.z > V_BOUND || this.Translation.z < -V_BOUND;
+        if (touchingHWall || touchingVWall)
+        {
+            this.LookAt(new Vector3(0, 0, 0), new Vector3(0, 1, 0));
         }
 
     }
 
     void on_replicationTimer_Timeout_()
     {
+        // if this creature hasn't eaten a single food, do not replicate
+        if (!ateAFood){
+            GD.Print("no food eaten, will not replicate");
+            return;
+        }
+
         Spatial creatureRoot = (Spatial)creatureGenerator_.Instance();
         Creature childCreature = (Creature)creatureRoot.GetNode("Area");
         creatureRoot.RemoveChild(childCreature);
         creatureRoot.QueueFree();
+        childCreature.world = this.world;
         this.GetParent().AddChild(childCreature);
 
         childCreature.Translation = this.Translation;

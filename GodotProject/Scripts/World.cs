@@ -17,8 +17,6 @@ public class World : Spatial
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
-        Engine.TimeScale = 5;
-
         creatureGenerator_ = (PackedScene)GD.Load("res://Scenes/Creature.tscn");
 
         // create some initial food
@@ -36,14 +34,16 @@ public class World : Spatial
         foodTimer_ = new Timer();
         this.AddChild(foodTimer_);
         foodTimer_.WaitTime = 1;
-        foodTimer_.Connect("timeout",this,"on_spawn_food");
+        foodTimer_.Connect("timeout",this,nameof(on_spawn_food));
         foodTimer_.Start();
 
         // connect gui
         GUI gui = (GUI)this.GetNode("GUI");
-        gui.Connect("CreateCreatures",this,"OnCreateCreatures");
+        gui.Connect(nameof(GUI.CreateCreatures),this,nameof(OnCreateCreatures));
 
-        gui.Connect("UpdateFoodSpawnRate",this,"OnUpdateFoodSpawnRate");
+        gui.Connect(nameof(GUI.SetFoodSpawnRate),this,nameof(OnSetFoodSpawnRate));
+
+        gui.Connect(nameof(GUI.SetTimeScale),this,nameof(OnSetTimeScale));
 
     }
 
@@ -121,7 +121,11 @@ public class World : Spatial
         food.Translation = new Vector3(randomX,0,randomZ);
     }
 
-    void OnUpdateFoodSpawnRate(float rate){
+    void OnSetFoodSpawnRate(float rate){
         this.foodTimer_.WaitTime = rate;
+    }
+
+    void OnSetTimeScale(float value){
+        Engine.TimeScale = value;
     }
 }

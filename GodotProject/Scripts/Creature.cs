@@ -37,6 +37,10 @@ public class Creature : Area
         creatureGenerator_ = (PackedScene)GD.Load("res://Scenes/Creature.tscn");
     }
 
+    public override void _InputEvent(Godot.Object camera, InputEvent @event, Vector3 clickPosition, Vector3 clickNormal, int shapeIdx){
+        GD.Print("exe");
+    }
+
     // Called every frame. 'delta' is the elapsed time since the previous frame.
     public override void _Process(float delta)
     {

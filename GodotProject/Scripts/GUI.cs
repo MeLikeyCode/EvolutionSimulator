@@ -5,7 +5,7 @@ public class GUI : Control
 {
     // Emitted when the GUI requests that some creatures be created.
     [Signal]
-    public delegate void CreateCreatures(float mass, float radius, int number);
+    public delegate void CreateCreatures(float mass, float radius, float movementForceMag, int number);
 
     // Emitted when the GUI requests that the food spawn rate be set.
     [Signal]
@@ -50,6 +50,7 @@ public class GUI : Control
         LineEdit massInput = (LineEdit)this.GetNode("TabContainer/Creature/Panel/Panel/LineEdit");
         LineEdit radiusInput = (LineEdit)this.GetNode("TabContainer/Creature/Panel/Panel/LineEdit2");
         LineEdit numberInput = (LineEdit)this.GetNode("TabContainer/Creature/Panel/Panel/LineEdit3");
+        LineEdit moveForceInput = (LineEdit)this.GetNode("TabContainer/Creature/Panel/Panel/LineEdit4");
 
         float temp;
         if (string.IsNullOrEmpty(massInput.Text) || !float.TryParse(massInput.Text, out temp))
@@ -69,9 +70,10 @@ public class GUI : Control
 
         float mass = massInput.Text.ToFloat();
         float radius = radiusInput.Text.ToFloat();
+        float movementForceMag = moveForceInput.Text.ToFloat();
         int number = (int)numberInput.Text.ToFloat();
 
-        this.EmitSignal(nameof(CreateCreatures), mass, radius, number);
+        this.EmitSignal(nameof(CreateCreatures), mass, radius, movementForceMag, number);
     }
 
     // Executed when the show gui button is toggled.

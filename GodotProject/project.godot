@@ -18,10 +18,6 @@ _global_script_class_icons={
 config/name="EvolutionSimulator"
 run/main_scene="res://Scenes/World.tscn"
 
-[physics]
-
-3d/default_gravity=0.0
-
 [rendering]
 
 environment/default_environment="res://default_env.tres"

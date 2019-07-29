@@ -98,17 +98,13 @@ public class World : Spatial
 
     // executed when the create creatures button is clicked.
     // will create the creatures specified.
-    void OnCreateCreatures(float mass, float radius, int number){
+    void OnCreateCreatures(float mass, float radius, float movementForceMag, int number){
         for (int i = 0; i < number; i++)
         {
-            Spatial creatureRoot = (Spatial)creatureGenerator_.Instance();
-            Creature creature = (Creature)creatureRoot.GetNode("Area");
-            creatureRoot.RemoveChild(creature);
-            creatureRoot.QueueFree();
+            Creature creature = (Creature)creatureGenerator_.Instance();
             creature.world = this;
             this.AddChild(creature);
-
-            creature.SetProperties(mass,radius);
+            creature.SetProperties(mass,radius,movementForceMag);
         }
     }
 

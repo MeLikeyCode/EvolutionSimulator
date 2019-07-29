@@ -1,13 +1,13 @@
 using Godot;
 using System;
 
-public class Creature : Area
+public class Creature : RigidBody
 {
     public World world;
     public float radius;
     public float mass;
+    public float movementForceMag;
     public float max_energy;
-    public float speed;
     public float current_energy;
     Timer replicationTimer_;
     PackedScene creatureGenerator_;
@@ -24,13 +24,14 @@ public class Creature : Area
 
         float mass = 2;
         float radius = 2;
-        SetProperties(mass, radius);
+        float movementForceMag = 10;
+        SetProperties(mass, radius, movementForceMag);
 
         current_energy = max_energy;
 
         replicationTimer_ = new Timer();
         this.AddChild(replicationTimer_);
-        replicationTimer_.WaitTime = 10;
+        replicationTimer_.WaitTime = (float)GD.RandRange(7,10);
         replicationTimer_.Connect("timeout", this, "on_replicationTimer_Timeout_");
         replicationTimer_.Start();
 
@@ -53,13 +54,13 @@ public class Creature : Area
             this.QueueFree();
     }
 
-    public void SetProperties(float mass, float radius)
+    public void SetProperties(float mass, float radius, float movementForceMag)
     {
         this.mass = mass;
         this.radius = radius;
+        this.movementForceMag = movementForceMag;
 
-        max_energy = mass * 25;
-        speed = 5 / mass;
+        max_energy = mass * 50;
 
         // make looks match physical properties
         SphereMesh mesh = new SphereMesh();
@@ -81,14 +82,10 @@ public class Creature : Area
         this.Rotation = new Vector3(this.Rotation.x, rotation, this.Rotation.z);
 
         // move forward
-        Vector3 forwardVector = this.Transform.basis.z.Normalized() * -1;
-        this.Translation += forwardVector * speed * delta; // move forward
-        this.current_energy -= delta * mass * 2;
+        this.AddCentralForce(this.Transform.basis.z.Normalized() * -1 * movementForceMag); // TODO remove -1 and see if creatures still move properly
+        this.current_energy -= movementForceMag / 2.0f;
 
         // if touching "wall", rotate towards center
-        if (world == null){
-            GD.Print("ERROR: Creature's 'world' attribute is null!");
-        }
         float H_BOUND = world.width / 2.0f;
         float V_BOUND = world.height / 2.0f;
         bool touchingHWall = this.Translation.x > H_BOUND || this.Translation.x < -H_BOUND;
@@ -104,22 +101,19 @@ public class Creature : Area
     {
         // if this creature hasn't eaten a single food, do not replicate
         if (!ateAFood){
-            GD.Print("no food eaten, will not replicate");
             return;
         }
 
-        Spatial creatureRoot = (Spatial)creatureGenerator_.Instance();
-        Creature childCreature = (Creature)creatureRoot.GetNode("Area");
-        creatureRoot.RemoveChild(childCreature);
-        creatureRoot.QueueFree();
-        childCreature.world = this.world;
-        this.GetParent().AddChild(childCreature);
+        Creature creature = (Creature)creatureGenerator_.Instance();
+        creature.world = this.world;
+        world.AddChild(creature);
 
-        childCreature.Translation = this.Translation;
-        childCreature.Rotation = this.Rotation;
+        creature.Translation = this.Translation;
+        creature.Rotation = this.Rotation;
         float childMass = Utilities.RandomizeValue(this.mass, 10);
         float childRadius = Utilities.RandomizeValue(this.radius, 10);
-        childCreature.SetProperties(childMass, childRadius);
-        childCreature.current_energy = childCreature.max_energy;
+        float childMoveForceMag = Utilities.RandomizeValue(this.movementForceMag,10);
+        creature.SetProperties(childMass, childRadius,childMoveForceMag);
+        creature.current_energy = creature.max_energy;
     }
 }

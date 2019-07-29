@@ -6,7 +6,7 @@ public class Food : Area
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
-        this.Connect("area_entered", this, "on_collide");
+        this.Connect("body_entered", this, "on_collide");
     }
 
     // Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -15,9 +15,9 @@ public class Food : Area
 
     }
 
-    void on_collide(Area area)
+    void on_collide(Node physicsBody)
     {
-        if (area is Creature creature)
+        if (physicsBody is Creature creature)
         {
             creature.current_energy += 100;
             creature.ateAFood = true;

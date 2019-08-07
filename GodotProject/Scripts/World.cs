@@ -6,7 +6,7 @@ public class World : Spatial
     public float height = 100;
     public float width = 100;
 
-    PackedScene creatureGenerator_;
+    public PackedScene creatureGenerator;
     PackedScene foodGenerator_;
     Timer foodTimer_;
 
@@ -17,7 +17,7 @@ public class World : Spatial
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
-        creatureGenerator_ = (PackedScene)GD.Load("res://Scenes/Creature.tscn");
+        creatureGenerator = (PackedScene)GD.Load("res://Scenes/Creature.tscn");
 
         // create some initial food
         foodGenerator_ = (PackedScene)GD.Load("res://Scenes/Food.tscn");
@@ -25,8 +25,8 @@ public class World : Spatial
         {
             Food food = (Food)foodGenerator_.Instance();
             this.AddChild(food);
-            float randomX = (float)GD.RandRange(-this.width/2.0,this.width/2.0);
-            float randomZ = (float)GD.RandRange(-this.height/2.0,this.height/2.0);
+            float randomX = (float)GD.RandRange(0,this.width);
+            float randomZ = (float)GD.RandRange(0,this.height);
             food.Translation = new Vector3(randomX,0,randomZ);
         }
 
@@ -101,8 +101,12 @@ public class World : Spatial
     void OnCreateCreatures(float mass, float radius, float movementForceMag, int number){
         for (int i = 0; i < number; i++)
         {
-            Creature creature = (Creature)creatureGenerator_.Instance();
+            Creature creature = (Creature)creatureGenerator.Instance();
             creature.world = this;
+            float randX = (float)GD.RandRange(0,this.width);
+            float randZ = (float)GD.RandRange(0,this.height);
+            Vector3 pos = new Vector3(randX,0,randZ);
+            creature.Translation = pos;
             this.AddChild(creature);
             creature.SetProperties(mass,radius,movementForceMag);
         }
@@ -112,8 +116,8 @@ public class World : Spatial
         Food food = (Food)foodGenerator_.Instance();
         this.AddChild(food);
 
-        float randomX = (float)GD.RandRange(-this.width/2.0,this.width/2.0);
-        float randomZ = (float)GD.RandRange(-this.height/2.0,this.height/2.0);
+        float randomX = (float)GD.RandRange(0,this.width);
+        float randomZ = (float)GD.RandRange(0,this.height);
         food.Translation = new Vector3(randomX,0,randomZ);
     }
 

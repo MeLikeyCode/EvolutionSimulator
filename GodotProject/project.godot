@@ -18,6 +18,15 @@ _global_script_class_icons={
 config/name="EvolutionSimulator"
 run/main_scene="res://Scenes/World.tscn"
 
+[mono]
+
+debugger_agent/wait_timeout=5000
+
+[physics]
+
+3d/default_gravity=0.0
+3d/default_linear_damp=1.0
+
 [rendering]
 
 environment/default_environment="res://default_env.tres"

@@ -105,6 +105,12 @@ public class Creature : RigidBody
             return;
         }
 
+        // if this creature doesn't have enough energy to give birth, do not replicate
+        float costForBaby = this.mass * 15;
+        if (this.currentEnergy < costForBaby)
+            return;
+
+        // replicate
         Creature creature = (Creature)this.world.creatureGenerator.Instance();
         creature.world = this.world;
         world.AddChild(creature);
@@ -116,6 +122,8 @@ public class Creature : RigidBody
         float childMoveForceMag = Utilities.RandomizeValue(this.movementForceMag,10);
         creature.SetProperties(childMass, childRadius,childMoveForceMag);
         creature.currentEnergy = creature.maxEnergy;
+
+        this.currentEnergy -= costForBaby;
     }
 
     void OnMoveTimerTimeout(){

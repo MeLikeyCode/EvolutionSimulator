@@ -45,6 +45,9 @@ public class World : Spatial
 
         gui.Connect(nameof(GUI.SetTimeScale),this,nameof(OnSetTimeScale));
 
+        Menu menu = this.GetNode<Menu>(nameof(Menu));
+        menu.Connect(nameof(Menu.QuitApp),this,nameof(OnGUIQuit));
+
     }
 
     // Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -94,6 +97,18 @@ public class World : Spatial
                 return;
             }
         }
+
+        // unhandled keyboard
+        if (@event is InputEventKey keyPressed){
+            // unhandled escape pressed
+            if (keyPressed.Pressed && keyPressed.Scancode == (int)KeyList.Escape){
+                GetTree().SetInputAsHandled();
+                Menu menu = this.GetNode<Menu>("Menu");
+                menu.Visible = true;
+                menu.FocusMode = Control.FocusModeEnum.All;
+                menu.GrabFocus();
+            }
+        }
     }
 
     // executed when the create creatures button is clicked.
@@ -127,5 +142,9 @@ public class World : Spatial
 
     void OnSetTimeScale(float value){
         Engine.TimeScale = value;
+    }
+
+    void OnGUIQuit(){
+        this.GetTree().Quit();
     }
 }

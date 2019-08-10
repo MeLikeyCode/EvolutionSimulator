@@ -53,6 +53,7 @@
     <Compile Include="Scripts\Creature.cs" />
     <Compile Include="Scripts\Food.cs" />
     <Compile Include="Scripts\GUI.cs" />
+    <Compile Include="Scripts\Menu.cs" />
     <Compile Include="Scripts\Test.cs" />
     <Compile Include="Scripts\Utilities.cs" />
     <Compile Include="Scripts\World.cs" />

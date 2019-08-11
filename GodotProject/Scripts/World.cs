@@ -48,8 +48,13 @@ public class World : Spatial
 
         gui.Connect(nameof(GUI.SetWorldBounds),this,nameof(OnUpdateBounds));
 
+        gui.Connect(nameof(GUI.SetPaintFoodMode),this,nameof(OnSetFoodPaintMode));
+
         Menu menu = this.GetNode<Menu>(nameof(Menu));
         menu.Connect(nameof(Menu.QuitApp), this, nameof(OnGUIQuit));
+
+        FoodPainter foodPainter = this.GetNode<FoodPainter>("FoodPainter");
+        foodPainter.Connect(nameof(FoodPainter.SpawnFood),this,nameof(OnFoodPainterSpawnFood));
 
 
     }
@@ -175,5 +180,17 @@ public class World : Spatial
     void OnUpdateBounds(float width, float height){
         this.width = width;
         this.height = height;
+    }
+
+    void OnSetFoodPaintMode(){
+        FoodPainter foodPainter = this.GetNode<FoodPainter>("FoodPainter");
+        foodPainter.on = true;
+        Input.SetCustomMouseCursor(GD.Load("res://Art/foodCursor.png"));
+    }
+
+    void OnFoodPainterSpawnFood(Vector3 pos){
+        Food food = (Food)foodGenerator_.Instance();
+        food.Translation = pos;
+        this.AddChild(food);
     }
 }

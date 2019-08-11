@@ -21,6 +21,9 @@ public class GUI : Control
     [Signal]
     public delegate void SetWorldBounds(float width, float height);
 
+    [Signal]
+    public delegate void SetPaintFoodMode();
+
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
@@ -43,6 +46,10 @@ public class GUI : Control
         // when bounds is changed, emit signal
         Button updateBoundsBtn = this.GetNode<Button>("TabContainer/World/Panel/Panel3/Button");
         updateBoundsBtn.Connect("pressed",this,nameof(OnUpdateBoundsPressed));
+
+        // when paint food button is clicked, emit signal
+        Button paintFoodBtn = this.GetNode<Button>("TabContainer/World/Panel/Panel/Button2");
+        paintFoodBtn.Connect("pressed",this,nameof(OnPaintFoodClicked));
     }
 
     // Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -118,5 +125,9 @@ public class GUI : Control
         float width = this.GetNode<LineEdit>("TabContainer/World/Panel/Panel3/LineEdit").Text.ToFloat();
         float height = this.GetNode<LineEdit>("TabContainer/World/Panel/Panel3/LineEdit2").Text.ToFloat();
         this.EmitSignal(nameof(SetWorldBounds),width,height);
+    }
+
+    void OnPaintFoodClicked(){
+        this.EmitSignal(nameof(SetPaintFoodMode));
     }
 }

@@ -51,6 +51,11 @@ public class Creature : RigidBody
             this.QueueFree();
     }
 
+    // Use this callback to modify physics related variables.
+    public override void _IntegrateForces(PhysicsDirectBodyState state){
+        // this.LinearVelocity = new Vector3(this.LinearVelocity.x,0,this.LinearVelocity.z); // TODO look here
+    }
+
     public void SetProperties(float mass, float radius, float movementForceMag)
     {
         this.mass = mass;
@@ -77,10 +82,8 @@ public class Creature : RigidBody
         this.LinearVelocity = new Vector3(0,0,0);
 
         // if touching "wall", face towards center
-        float H_BOUND = world.width;
-        float V_BOUND = world.height;
-        bool touchingHWall = this.Translation.x > H_BOUND || this.Translation.x < -H_BOUND;
-        bool touchingVWall = this.Translation.z > V_BOUND || this.Translation.z < -V_BOUND;
+        bool touchingHWall = this.Translation.x > world.width || this.Translation.x < 0;
+        bool touchingVWall = this.Translation.z > world.height || this.Translation.z < 0;
         if (touchingHWall || touchingVWall)
         {
             this.LookAt(new Vector3(0, 0, 0), new Vector3(0, 1, 0));

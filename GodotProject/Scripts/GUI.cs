@@ -8,12 +8,18 @@ public class GUI : Control
     public delegate void CreateCreatures(float mass, float radius, float movementForceMag, int number);
 
     // Emitted when the GUI requests that the food spawn rate be set.
+    // 'numToCreate' - the number of food to create each food spawn time
+    // 'delay' - the number of seconds between food spawn times
     [Signal]
-    public delegate void SetFoodSpawnRate(float rate);
+    public delegate void SetFoodSpawnRate(int numToCreate, float delay);
 
     // Emitted when the GUI requests that the time scale be changed.
     [Signal]
     public delegate void SetTimeScale(float value);
+
+    // Emitted when the GUI requests that the world bounds be changed.
+    [Signal]
+    public delegate void SetWorldBounds(float width, float height);
 
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
@@ -26,16 +32,17 @@ public class GUI : Control
         Button createCreaturesBtn = (Button)this.GetNode("TabContainer/Creature/Panel/Panel/Button");
         createCreaturesBtn.Connect("pressed", this, nameof(OnCreateCreaturesPressed));
 
-        // when update food spawn rate button is clicked, update food spawn rate
+        // when update food button is clicked, emit signal
         Button updateFoodBtn = (Button)this.GetNode("TabContainer/World/Panel/Panel/Button");
         updateFoodBtn.Connect("pressed", this, nameof(OnUpdateFoodSpawnRatePressed));
-
-        HSlider foodSpawnSlider = (HSlider)this.GetNode("TabContainer/World/Panel/Panel/HSlider");
-        foodSpawnSlider.Connect("value_changed",this,nameof(OnFoodSliderValueChanged));
 
         // when time scale slider is changed, emit signal
         HSlider timeSlider = (HSlider)this.GetNode("TabContainer/World/Panel/Panel2/HSlider");
         timeSlider.Connect("value_changed",this,nameof(OnTimeSliderValueChanged));
+
+        // when bounds is changed, emit signal
+        Button updateBoundsBtn = this.GetNode<Button>("TabContainer/World/Panel/Panel3/Button");
+        updateBoundsBtn.Connect("pressed",this,nameof(OnUpdateBoundsPressed));
     }
 
     // Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -94,16 +101,22 @@ public class GUI : Control
 
     void OnUpdateFoodSpawnRatePressed()
     {
-        LineEdit input = (LineEdit)this.GetNode("TabContainer/World/Panel/Panel/LineEdit");
-        float rate = input.Text.ToFloat();
-        this.EmitSignal(nameof(SetFoodSpawnRate),rate);
-    }
-
-    void OnFoodSliderValueChanged(float value){
-        this.EmitSignal(nameof(SetFoodSpawnRate),value);
+        LineEdit numToCreateInput = (LineEdit)this.GetNode("TabContainer/World/Panel/Panel/LineEdit");
+        LineEdit delayInput = (LineEdit)this.GetNode("TabContainer/World/Panel/Panel/LineEdit2");
+        int numToCreate = numToCreateInput.Text.ToInt();
+        float delay = delayInput.Text.ToFloat();
+        this.EmitSignal(nameof(SetFoodSpawnRate),numToCreate,delay);
     }
 
     void OnTimeSliderValueChanged(float value){
+        Label timeScaleLabel = this.GetNode<Label>("TabContainer/World/Panel/Panel2/Label2");
+        timeScaleLabel.Text = value.ToString() + "x";
         this.EmitSignal(nameof(SetTimeScale),value);
+    }
+
+    void OnUpdateBoundsPressed(){
+        float width = this.GetNode<LineEdit>("TabContainer/World/Panel/Panel3/LineEdit").Text.ToFloat();
+        float height = this.GetNode<LineEdit>("TabContainer/World/Panel/Panel3/LineEdit2").Text.ToFloat();
+        this.EmitSignal(nameof(SetWorldBounds),width,height);
     }
 }

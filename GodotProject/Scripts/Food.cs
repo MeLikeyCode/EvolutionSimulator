@@ -19,7 +19,7 @@ public class Food : Area
     {
         if (physicsBody is Creature creature)
         {
-            creature.currentEnergy += 200;
+            creature.currentEnergy += 100;
             creature.ateAFood = true;
             this.QueueFree();
         }

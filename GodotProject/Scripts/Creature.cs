@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public class Creature : RigidBody
 {
@@ -30,15 +31,19 @@ public class Creature : RigidBody
 
         replicationTimer_ = new Timer();
         this.AddChild(replicationTimer_);
-        replicationTimer_.WaitTime = (float)GD.RandRange(7,10);
+        replicationTimer_.WaitTime = (float)GD.RandRange(7, 10);
         replicationTimer_.Connect("timeout", this, "on_replicationTimer_Timeout_");
         replicationTimer_.Start();
 
         moveTimer_ = new Timer();
         this.AddChild(moveTimer_);
         moveTimer_.WaitTime = 1;
-        moveTimer_.Connect("timeout",this,nameof(OnMoveTimerTimeout));
+        moveTimer_.Connect("timeout", this, nameof(OnMoveTimerTimeout));
         moveTimer_.Start();
+
+        this.Connect("body_entered", this, nameof(OnCollisionWithCreature));
+        this.ContactMonitor = true;
+        this.ContactsReported = 10;
     }
 
     // Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -47,12 +52,15 @@ public class Creature : RigidBody
         // use some energy to live        
         float ENERGY_BURN_RATE = this.mass;
         currentEnergy -= ENERGY_BURN_RATE * delta;
-        if (currentEnergy < 0)
+        if (currentEnergy < 0){
             this.QueueFree();
+            this.world.creatures.Remove(this);
+        }
     }
 
     // Use this callback to modify physics related variables.
-    public override void _IntegrateForces(PhysicsDirectBodyState state){
+    public override void _IntegrateForces(PhysicsDirectBodyState state)
+    {
         // this.LinearVelocity = new Vector3(this.LinearVelocity.x,0,this.LinearVelocity.z); // TODO look here
     }
 
@@ -90,21 +98,43 @@ public class Creature : RigidBody
             this.RotateY(Mathf.Deg2Rad(180)); // rotate 180 degrees since LookAt makes *negative* z face desired point!
         }
 
-        // rotate randomly
-        float rotation = this.Rotation.y + Mathf.Deg2Rad((float)GD.RandRange(-40, 40));
-        this.Rotation = new Vector3(this.Rotation.x, rotation, this.Rotation.z);
+        // calculate movement vector (take into account all nearby creatures)
+        var nearbyBiggerCreatures = this.world.GetCreaturesInRadius(this.Translation,10);
+        foreach (var creature in nearbyBiggerCreatures.ToArray())
+        {
+            if (creature.mass < this.mass){
+                nearbyBiggerCreatures.Remove(creature);
+            }
+        }
+        List<Vector3> allVectors = new List<Vector3>();
+        foreach (var creature in nearbyBiggerCreatures)
+        {
+            Vector3 vector = this.Translation - creature.Translation;
+            allVectors.Add(vector);
+        }
+        Vector3 overallMoveVector = new Vector3();
+        foreach (var vector in allVectors)
+        {
+            overallMoveVector += vector;
+        }
+        this.LookAt(this.Translation + -1 * overallMoveVector,new Vector3(0,1,0));
+        if (allVectors.Count <= 1){
+            float rotation = this.Rotation.y + Mathf.Deg2Rad((float)GD.RandRange(-40, 40));
+            this.Rotation = new Vector3(this.Rotation.x, rotation, this.Rotation.z);
+        }
 
         // move forward
         this.AddCentralForce(this.Transform.basis.z.Normalized() * movementForceMag);
         float distance = movementForceMag / this.mass; // distance the creature will travel in 1 second as a result of this force being applied
-        float energyCostToMove = movementForceMag / 20;
+        float energyCostToMove = movementForceMag / 40;
         this.currentEnergy -= energyCostToMove;
     }
 
     void on_replicationTimer_Timeout_()
     {
         // if this creature hasn't eaten a single food, do not replicate
-        if (!ateAFood){
+        if (!ateAFood)
+        {
             return;
         }
 
@@ -117,19 +147,37 @@ public class Creature : RigidBody
         Creature creature = (Creature)this.world.creatureGenerator.Instance();
         creature.world = this.world;
         world.AddChild(creature);
+        world.creatures.Add(creature);
 
         creature.Translation = this.Translation;
         creature.Rotation = this.Rotation;
         float childMass = Utilities.RandomizeValue(this.mass, 10);
         float childRadius = Utilities.RandomizeValue(this.radius, 10);
-        float childMoveForceMag = Utilities.RandomizeValue(this.movementForceMag,10);
-        creature.SetProperties(childMass, childRadius,childMoveForceMag);
+        float childMoveForceMag = Utilities.RandomizeValue(this.movementForceMag, 10);
+        creature.SetProperties(childMass, childRadius, childMoveForceMag);
         creature.currentEnergy = creature.maxEnergy;
 
         this.currentEnergy -= costForBaby;
     }
 
-    void OnMoveTimerTimeout(){
+    void OnMoveTimerTimeout()
+    {
         move_();
+    }
+
+    // Executed when this creature collides with another.
+    void OnCollisionWithCreature(Node otherCreature)
+    {
+        if (otherCreature is Creature asCreature)
+        {
+            if (this.mass != asCreature.mass)
+            {
+                Creature biggerCreature = this.mass > asCreature.mass ? this : asCreature;
+                Creature smallerCreature = biggerCreature == this ? asCreature : this;
+                biggerCreature.currentEnergy += smallerCreature.mass * 100;
+                smallerCreature.QueueFree();
+                smallerCreature.world.creatures.Remove(smallerCreature);
+            }
+        }
     }
 }

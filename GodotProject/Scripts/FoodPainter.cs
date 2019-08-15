@@ -26,6 +26,16 @@ public class FoodPainter : Node
                     // TODO create initial food
                     this.dragCount_ = 0;
 
+                    Camera currentCam = GetViewport().GetCamera();
+                    Plane dropPlane = Plane.PlaneXZ;
+
+                    for (int i = 0; i < 3; i++)
+                    {
+                        Vector3 worldPos = dropPlane.IntersectRay(currentCam.ProjectRayOrigin(asMousePress.Position), currentCam.ProjectRayNormal(asMousePress.Position));
+                        worldPos += new Vector3((float)GD.RandRange(-10, 10), 0, (float)GD.RandRange(-10, 10));
+                        this.EmitSignal(nameof(SpawnFood), worldPos);
+                    }
+
                     GetTree().SetInputAsHandled();
                     return;
                 }
@@ -38,7 +48,7 @@ public class FoodPainter : Node
                 {
                     this.dragCount_ += 1;
 
-                    if (this.dragCount_ % 10 == 0)
+                    if (this.dragCount_ % 3 == 0)
                     { // every 10 pixels dragged, request new foods spawned
                         Camera currentCam = GetViewport().GetCamera();
                         Plane dropPlane = Plane.PlaneXZ;

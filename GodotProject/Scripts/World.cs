@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public class World : Spatial
 {
@@ -14,6 +15,8 @@ public class World : Spatial
     Vector2 cameraDragClickPos_; // the screen position that right mouse button was clicked
     Vector3 cameraDragCamPos_; // the camera's position when right mouse button was clicked
     private int numFoodPerSpawn; // how many food to spawn each time we decide to spawn food
+
+    public List<Creature> creatures = new List<Creature>(); // all the creatures spanwed
 
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
@@ -137,6 +140,7 @@ public class World : Spatial
         for (int i = 0; i < number; i++)
         {
             Creature creature = (Creature)creatureGenerator.Instance();
+            this.creatures.Add(creature);
             creature.world = this;
             float randX = (float)GD.RandRange(0, this.width);
             float randZ = (float)GD.RandRange(0, this.height);
@@ -192,5 +196,16 @@ public class World : Spatial
         Food food = (Food)foodGenerator_.Instance();
         food.Translation = pos;
         this.AddChild(food);
+    }
+
+    public List<Creature> GetCreaturesInRadius(Vector3 position, float radius){
+        List<Creature> results = new List<Creature>();
+        foreach (var creature in this.creatures)
+        {
+            if (position.DistanceTo(creature.Translation) < radius){
+                results.Add(creature);
+            }
+        }
+        return results;
     }
 }

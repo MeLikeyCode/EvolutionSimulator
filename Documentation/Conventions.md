@@ -5,4 +5,5 @@
 - speed -> m/s
 - energy/work -> joules
 - time -> seconds
+- force -> newtons
 

@@ -3,6 +3,10 @@ using System;
 
 public class GUI : Control
 {
+    // Emitted when the GUI requests that the keyboard/mouse should be ready to place creatures by clicking.
+    [Signal]
+    public delegate void SetCreatureCreatureMode();
+
     // Emitted when the GUI requests that some creatures be created.
     [Signal]
     public delegate void CreateCreatures(float mass, float radius, float movementForceMag, int number);
@@ -21,8 +25,13 @@ public class GUI : Control
     [Signal]
     public delegate void SetWorldBounds(float width, float height);
 
+    // Emitted when the GUI requests that the keyboard/mouse should be ready to paint food.
     [Signal]
     public delegate void SetPaintFoodMode();
+
+    // Emitted when the GUI's select creature button has been pressed.
+    [Signal]
+    public delegate void SelectCreature();
 
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
@@ -50,6 +59,13 @@ public class GUI : Control
         // when paint food button is clicked, emit signal
         Button paintFoodBtn = this.GetNode<Button>("TabContainer/World/Panel/Panel/Button2");
         paintFoodBtn.Connect("pressed",this,nameof(OnPaintFoodClicked));
+
+        // when create creature button is clicked, emit signal
+        Button createCreatureBtn = this.GetNode<Button>("TabContainer/Creature/Panel/Panel2/Button");
+        createCreatureBtn.Connect("pressed",this,nameof(OnCreateCreaturePressed));
+
+        Button selectCreatureBtn = this.GetNode<Button>("TabContainer/Stats/Panel/Panel2/Button");
+        selectCreatureBtn.Connect("pressed",this,nameof(OnSelectCreaturePressed));
     }
 
     // Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -90,6 +106,11 @@ public class GUI : Control
         this.EmitSignal(nameof(CreateCreatures), mass, radius, movementForceMag, number);
     }
 
+    void OnCreateCreaturePressed(){
+        this.EmitSignal(nameof(SetCreatureCreatureMode));
+    }
+
+
     // Executed when the show gui button is toggled.
     void OnShowGuiPressed()
     {
@@ -129,5 +150,9 @@ public class GUI : Control
 
     void OnPaintFoodClicked(){
         this.EmitSignal(nameof(SetPaintFoodMode));
+    }
+
+    void OnSelectCreaturePressed(){
+        this.EmitSignal(nameof(SelectCreature));
     }
 }

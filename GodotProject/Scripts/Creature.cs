@@ -10,29 +10,67 @@ public class Creature : RigidBody
     public float movementForceMag;
     public float maxEnergy;
     public float currentEnergy;
+    public bool ateAFood = false;
+    public int numChildrenSpanwed = 0;
+    public int numCreaturesEaten = 0;
+    
     Timer replicationTimer_;
     Timer moveTimer_;
-    public bool ateAFood = false;
+    bool initialized_ = false;
+
+    public bool Initialized{
+        get {return initialized_;}
+    }
 
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
-        if (world == null)
+
+    }
+
+    // Called every frame. 'delta' is the elapsed time since the previous frame.
+    public override void _Process(float delta)
+    {
+        // use some energy to live        
+        float ENERGY_BURN_RATE = this.mass;
+        currentEnergy -= ENERGY_BURN_RATE * delta;
+        if (currentEnergy < 0)
         {
-            GD.Print("ERROR: Creature's 'world' attribute must be set before it enters scene tree.");
+            this.DeleteCreature();
+        }
+    }
+
+    public void InitializeCreature(float mass, float radius, float movementForceMag)
+    {
+        if (this.Initialized){
+            GD.Print("ERROR: Creature is already initialized. Can only be initialized once.");
+            GetTree().Quit();
         }
 
-        float mass = 2;
-        float radius = 2;
-        float movementForceMag = 20;
-        SetProperties(mass, radius, movementForceMag);
+        // calculate/set physical properties
+        this.mass = mass;
+        this.radius = radius;
+        this.movementForceMag = movementForceMag;
 
-        currentEnergy = maxEnergy;
+        this.maxEnergy = this.mass * 50;
+        this.currentEnergy = this.maxEnergy;
 
+        // make looks match physical properties
+        SphereMesh mesh = new SphereMesh();
+        ((MeshInstance)this.GetNode("MeshInstance")).Mesh = mesh;
+        mesh.Radius = radius;
+        mesh.Height = radius * 2;
+
+        SpatialMaterial material = new SpatialMaterial();
+        float brightness = (this.mass / 2.0f) * 1.0f;
+        material.AlbedoColor = new Color(brightness, brightness, brightness);
+        mesh.Material = material;
+
+        // create timers/connect signals
         replicationTimer_ = new Timer();
         this.AddChild(replicationTimer_);
         replicationTimer_.WaitTime = (float)GD.RandRange(7, 10);
-        replicationTimer_.Connect("timeout", this, "on_replicationTimer_Timeout_");
+        replicationTimer_.Connect("timeout", this, "OnReplicationTimerTimeout");
         replicationTimer_.Start();
 
         moveTimer_ = new Timer();
@@ -44,50 +82,44 @@ public class Creature : RigidBody
         this.Connect("body_entered", this, nameof(OnCollisionWithCreature));
         this.ContactMonitor = true;
         this.ContactsReported = 10;
-    }
 
-    // Called every frame. 'delta' is the elapsed time since the previous frame.
-    public override void _Process(float delta)
-    {
-        // use some energy to live        
-        float ENERGY_BURN_RATE = this.mass;
-        currentEnergy -= ENERGY_BURN_RATE * delta;
-        if (currentEnergy < 0){
-            this.QueueFree();
-            this.world.creatures.Remove(this);
-        }
-    }
-
-    // Use this callback to modify physics related variables.
-    public override void _IntegrateForces(PhysicsDirectBodyState state)
-    {
-        // this.LinearVelocity = new Vector3(this.LinearVelocity.x,0,this.LinearVelocity.z); // TODO look here
-    }
-
-    public void SetProperties(float mass, float radius, float movementForceMag)
-    {
-        this.mass = mass;
-        this.radius = radius;
-        this.movementForceMag = movementForceMag;
-
-        maxEnergy = mass * 50;
-
-        // make looks match physical properties
-        SphereMesh mesh = new SphereMesh();
-        ((MeshInstance)this.GetNode("MeshInstance")).Mesh = mesh;
-        mesh.Radius = radius;
-        mesh.Height = radius * 2;
-
-        SpatialMaterial material = new SpatialMaterial();
-
-        float brightness = (this.mass / 2.0f) * 1.0f;
-        material.AlbedoColor = new Color(brightness, brightness, brightness);
-        mesh.Material = material;
+        this.initialized_ = true;
     }
 
     private void move_()
     {
-        this.LinearVelocity = new Vector3(0,0,0);
+        this.LinearVelocity = new Vector3(0, 0, 0);
+
+        // rotate
+        // - if there are bigger creatures (preditors) nearby, rotate to face away from all of them
+        // - otherwise, face a random direction
+        var nearbyBiggerCreatures = new List<Creature>();
+        foreach (var creature in this.world.GetCreaturesInRadius(this.Translation, 10))
+            if (creature.mass > this.mass && creature != this)
+                nearbyBiggerCreatures.Add(creature);
+
+        if (nearbyBiggerCreatures.Count > 0)
+        {
+            List<Vector3> creatureVectors = new List<Vector3>(); // a list of vectors, each going from this creature to a nearby big creature
+            foreach (var creature in nearbyBiggerCreatures)
+            {
+                Vector3 vector = this.Translation - creature.Translation;
+                creatureVectors.Add(vector);
+            }
+            Vector3 overallMoveVector = new Vector3();
+            foreach (var vector in creatureVectors)
+                overallMoveVector += vector;
+            overallMoveVector *= -1;
+
+            // look away from all creatures
+            this.LookAt(this.Translation + overallMoveVector, new Vector3(0, 1, 0));
+        }
+        else
+        {
+            // no big creatures nearby - look at a random direction
+            float rotation = this.Rotation.y + Mathf.Deg2Rad((float)GD.RandRange(-40, 40));
+            this.Rotation = new Vector3(this.Rotation.x, rotation, this.Rotation.z);
+        }
 
         // if touching "wall", face towards center
         bool touchingHWall = this.Translation.x > world.width || this.Translation.x < 0;
@@ -98,45 +130,18 @@ public class Creature : RigidBody
             this.RotateY(Mathf.Deg2Rad(180)); // rotate 180 degrees since LookAt makes *negative* z face desired point!
         }
 
-        // calculate movement vector (take into account all nearby creatures)
-        var nearbyBiggerCreatures = this.world.GetCreaturesInRadius(this.Translation,10);
-        foreach (var creature in nearbyBiggerCreatures.ToArray())
-        {
-            if (creature.mass < this.mass){
-                nearbyBiggerCreatures.Remove(creature);
-            }
-        }
-        List<Vector3> allVectors = new List<Vector3>();
-        foreach (var creature in nearbyBiggerCreatures)
-        {
-            Vector3 vector = this.Translation - creature.Translation;
-            allVectors.Add(vector);
-        }
-        Vector3 overallMoveVector = new Vector3();
-        foreach (var vector in allVectors)
-        {
-            overallMoveVector += vector;
-        }
-        this.LookAt(this.Translation + -1 * overallMoveVector,new Vector3(0,1,0));
-        if (allVectors.Count <= 1){
-            float rotation = this.Rotation.y + Mathf.Deg2Rad((float)GD.RandRange(-40, 40));
-            this.Rotation = new Vector3(this.Rotation.x, rotation, this.Rotation.z);
-        }
-
         // move forward
-        this.AddCentralForce(this.Transform.basis.z.Normalized() * movementForceMag);
-        float distance = movementForceMag / this.mass; // distance the creature will travel in 1 second as a result of this force being applied
-        float energyCostToMove = movementForceMag / 40;
+        this.ApplyCentralImpulse(this.Transform.basis.z.Normalized() * movementForceMag);
+        float energyCostToMove = Mathf.Pow(movementForceMag, 2); // energy cost to move = impulse applied ** 2
         this.currentEnergy -= energyCostToMove;
     }
 
-    void on_replicationTimer_Timeout_()
+    // Executed when it is time for the creature to replicate.
+    void OnReplicationTimerTimeout()
     {
         // if this creature hasn't eaten a single food, do not replicate
         if (!ateAFood)
-        {
             return;
-        }
 
         // if this creature doesn't have enough energy to give birth, do not replicate
         float costForBaby = this.mass * 15;
@@ -145,19 +150,19 @@ public class Creature : RigidBody
 
         // replicate
         Creature creature = (Creature)this.world.creatureGenerator.Instance();
-        creature.world = this.world;
-        world.AddChild(creature);
-        world.creatures.Add(creature);
 
-        creature.Translation = this.Translation;
+        float offset = ((BoxShape)(this.GetNode<CollisionShape>("CollisionShape").Shape)).Extents.x;
+        creature.Translation = this.Translation + new Vector3(offset * 3, 0, 0);
         creature.Rotation = this.Rotation;
         float childMass = Utilities.RandomizeValue(this.mass, 10);
         float childRadius = Utilities.RandomizeValue(this.radius, 10);
         float childMoveForceMag = Utilities.RandomizeValue(this.movementForceMag, 10);
-        creature.SetProperties(childMass, childRadius, childMoveForceMag);
-        creature.currentEnergy = creature.maxEnergy;
+        creature.InitializeCreature(childMass, childRadius, childMoveForceMag);
 
         this.currentEnergy -= costForBaby;
+        this.numChildrenSpanwed += 1;
+
+        this.world.AddCreature(creature);
     }
 
     void OnMoveTimerTimeout()
@@ -175,9 +180,16 @@ public class Creature : RigidBody
                 Creature biggerCreature = this.mass > asCreature.mass ? this : asCreature;
                 Creature smallerCreature = biggerCreature == this ? asCreature : this;
                 biggerCreature.currentEnergy += smallerCreature.mass * 100;
-                smallerCreature.QueueFree();
-                smallerCreature.world.creatures.Remove(smallerCreature);
+                biggerCreature.numCreaturesEaten += 1;
+                this.DeleteCreature();
             }
         }
+    }
+
+    /// Removes the creature from the World and then QueueFrees it.
+    public void DeleteCreature()
+    {
+        this.world.RemoveCreature(this);
+        this.QueueFree();
     }
 }

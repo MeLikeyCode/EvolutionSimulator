@@ -1,45 +1,26 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene format=2]
 
-[ext_resource path="res://Scripts/Test.cs" type="Script" id=1]
+[node name="Control" type="Control"]
 
-[sub_resource type="PhysicsMaterial" id=1]
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+margin_left = 60.0
+margin_top = 40.0
+margin_right = 210.0
+margin_bottom = 230.0
 
-[sub_resource type="BoxShape" id=2]
+[node name="Panel" type="Panel" parent="ScrollContainer"]
+margin_right = 500.0
+margin_bottom = 500.0
+rect_min_size = Vector2( 500, 500 )
 
-[sub_resource type="CubeMesh" id=3]
+[node name="Button" type="Button" parent="ScrollContainer/Panel"]
+margin_right = 12.0
+margin_bottom = 20.0
+text = "text"
 
-[sub_resource type="BoxShape" id=4]
-
-[sub_resource type="SpatialMaterial" id=5]
-albedo_color = Color( 0.117647, 0.141176, 0.67451, 1 )
-
-[sub_resource type="CubeMesh" id=6]
-material = SubResource( 5 )
-
-[node name="Spatial" type="Spatial"]
-
-[node name="StaticBody" type="StaticBody" parent="."]
-transform = Transform( 12.8, 0, 0, 0, 1, 0, 0, 0, 10.55, 0, 0, 0 )
-physics_material_override = SubResource( 1 )
-
-[node name="CollisionShape" type="CollisionShape" parent="StaticBody"]
-shape = SubResource( 2 )
-
-[node name="MeshInstance" type="MeshInstance" parent="StaticBody"]
-mesh = SubResource( 3 )
-material/0 = null
-
-[node name="RigidBody" type="RigidBody" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0 )
-linear_damp = 0.5
-script = ExtResource( 1 )
-
-[node name="CollisionShape" type="CollisionShape" parent="RigidBody"]
-shape = SubResource( 4 )
-
-[node name="MeshInstance" type="MeshInstance" parent="RigidBody"]
-mesh = SubResource( 6 )
-material/0 = null
-
-[node name="Camera" type="Camera" parent="."]
-transform = Transform( 1, 0, 0, 0, -4.37114e-008, 1, 0, -1, -4.37114e-008, 0, 40, 0 )
+[node name="Button2" type="Button" parent="ScrollContainer/Panel"]
+margin_left = 200.0
+margin_top = 280.0
+margin_right = 237.0
+margin_bottom = 300.0
+text = "text"

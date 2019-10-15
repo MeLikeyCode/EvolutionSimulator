@@ -51,6 +51,8 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scripts\Creature.cs" />
+    <Compile Include="Scripts\CreatureSpawner.cs" />
+    <Compile Include="Scripts\CreatureSelector.cs" />
     <Compile Include="Scripts\Food.cs" />
     <Compile Include="Scripts\FoodPainter.cs" />
     <Compile Include="Scripts\GUI.cs" />

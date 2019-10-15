@@ -21,6 +21,7 @@ public class Food : Area
         {
             creature.currentEnergy += 100;
             creature.ateAFood = true;
+            creature.world.foods.Remove(this);
             this.QueueFree();
         }
     }

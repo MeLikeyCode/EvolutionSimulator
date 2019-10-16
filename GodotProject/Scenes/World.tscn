@@ -1,11 +1,10 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://Scripts/World.cs" type="Script" id=1]
 [ext_resource path="res://Scenes/GUI.tscn" type="PackedScene" id=2]
 [ext_resource path="res://Scenes/Menu.tscn" type="PackedScene" id=3]
 [ext_resource path="res://Scripts/FoodPainter.cs" type="Script" id=4]
 [ext_resource path="res://Scripts/CreatureSpawner.cs" type="Script" id=5]
-[ext_resource path="res://Scripts/CreatureSelector.cs" type="Script" id=6]
 
 [node name="Spatial" type="Spatial"]
 script = ExtResource( 1 )
@@ -29,6 +28,3 @@ script = ExtResource( 4 )
 
 [node name="CreatureSpawner" type="Node" parent="."]
 script = ExtResource( 5 )
-
-[node name="CreatureSelector" type="Node" parent="."]
-script = ExtResource( 6 )

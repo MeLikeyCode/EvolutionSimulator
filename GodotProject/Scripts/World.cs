@@ -21,6 +21,8 @@ public class World : Spatial
     public List<Creature> creatures = new List<Creature>(); // all the creatures spanwed
     public List<Food> foods = new List<Food>(); // all the foods in the world
 
+    bool selectingCreature_;
+
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
@@ -49,7 +51,7 @@ public class World : Spatial
         statTimer_ = new Timer();
         this.AddChild(statTimer_);
         statTimer_.WaitTime = 1;
-        statTimer_.Connect("timeout",this,nameof(OnCalculateStats));
+        statTimer_.Connect("timeout", this, nameof(OnCalculateStats));
         statTimer_.Start();
 
         // connect gui
@@ -66,9 +68,7 @@ public class World : Spatial
 
         gui.Connect(nameof(GUI.SetCreatureCreatureMode), this, nameof(OnSetCreateCreatureMode));
 
-        gui.Connect(nameof(GUI.SelectCreature),this,nameof(OnSelectCreaturePressed));
-
-        this.GetNode<CreatureSelector>("CreatureSelector").Connect(nameof(CreatureSelector.CreatureSelected),this,nameof(OnCreatureSelected));
+        gui.Connect(nameof(GUI.SelectCreature), this, nameof(OnSelectCreaturePressed));
 
         Menu menu = this.GetNode<Menu>(nameof(Menu));
         menu.Connect(nameof(Menu.QuitApp), this, nameof(OnGUIQuit));
@@ -91,7 +91,7 @@ public class World : Spatial
         // unhandled mouse click
         if (@event is InputEventMouseButton mousePressed)
         {
-            // left button
+            // right button
             if (mousePressed.ButtonIndex == (int)ButtonList.Right)
             {
                 cameraDragClickPos_ = mousePressed.Position;
@@ -99,6 +99,7 @@ public class World : Spatial
                 GetTree().SetInputAsHandled();
                 return;
             }
+
             // wheel
             float AMOUNT = GetViewport().GetCamera().Translation.y / 10;
             if (mousePressed.ButtonIndex == (int)ButtonList.WheelDown)
@@ -142,6 +143,13 @@ public class World : Spatial
             // unhandled escape pressed
             if (keyPressed.Pressed && keyPressed.Scancode == (int)KeyList.Escape)
             {
+                if (this.selectingCreature_){
+                    this.selectingCreature_ = false;
+                    Input.SetDefaultCursorShape();
+                    this.GetTree().SetInputAsHandled();
+                    return;
+                }
+
                 GetTree().SetInputAsHandled();
                 Menu menu = this.GetNode<Menu>("Menu");
                 menu.Visible = true;
@@ -152,20 +160,27 @@ public class World : Spatial
     }
 
     // executed when the "select creature" button was clicked.
-    void OnSelectCreaturePressed(){
-        this.GetNode<CreatureSelector>("CreatureSelector").On = true;
+    void OnSelectCreaturePressed()
+    {
+        this.selectingCreature_ = true;
         Input.SetDefaultCursorShape(Input.CursorShape.Cross);
     }
 
-    // executec when a creature is actually selected; will update the displayed statistics for the creature
-    void OnCreatureSelected(Creature creature){
-        Panel panel = this.GetNode<GUI>("GUI").GetNode<Panel>("TabContainer/Stats/Panel/Panel2");
+    void OnCreatureClicked(Creature creature)
+    {
+        if (this.selectingCreature_)
+        {
+            Panel panel = this.GetNode<GUI>("GUI").GetNode<Panel>("TabContainer/Stats/Panel/Panel2");
 
-        panel.GetNode<Label>("Label7").Text = creature.mass.ToString();
-        panel.GetNode<Label>("Label8").Text = creature.radius.ToString();
-        panel.GetNode<Label>("Label9").Text = creature.movementForceMag.ToString();
-        panel.GetNode<Label>("Label10").Text = creature.numCreaturesEaten.ToString();
-        panel.GetNode<Label>("Label11").Text = creature.numChildrenSpanwed.ToString();
+            panel.GetNode<Label>("Label7").Text = creature.mass.ToString();
+            panel.GetNode<Label>("Label8").Text = creature.radius.ToString();
+            panel.GetNode<Label>("Label9").Text = creature.movementForceMag.ToString();
+            panel.GetNode<Label>("Label10").Text = creature.numCreaturesEaten.ToString();
+            panel.GetNode<Label>("Label11").Text = creature.numChildrenSpanwed.ToString();
+
+            this.selectingCreature_ = false;
+            Input.SetDefaultCursorShape();
+        }
     }
 
     // executed when the create creatures button is clicked.
@@ -185,13 +200,14 @@ public class World : Spatial
     }
 
     // executed when it is time to recalculate stats
-    void OnCalculateStats(){
+    void OnCalculateStats()
+    {
         Panel panel = this.GetNode<GUI>("GUI").GetNode<Panel>("TabContainer/Stats/Panel/Panel");
 
         float totalMass = 0;
         float totalRadius = 0;
         float totalMovementForce = 0;
-        
+
         foreach (var creature in this.creatures)
         {
             totalMass += creature.mass;
@@ -205,7 +221,7 @@ public class World : Spatial
         float averageMovementForce = totalMovementForce / numberOfCreatures;
 
         float FOOD_EXTENTS = 0.5f;
-        float individualFoodArea = Mathf.Pow(FOOD_EXTENTS * 2,2);
+        float individualFoodArea = Mathf.Pow(FOOD_EXTENTS * 2, 2);
         int numberOfFood = this.foods.Count;
         float foodArea = numberOfFood * individualFoodArea;
         float area = this.width * this.height;
@@ -260,7 +276,7 @@ public class World : Spatial
         foodPainter.On = true;
         Texture image = GD.Load<Texture>("res://Art/foodCursor.png");
         Vector2 imageCenter = new Vector2(image.GetWidth() / 2, image.GetHeight() / 2);
-        Input.SetCustomMouseCursor(image,Input.CursorShape.Arrow, imageCenter);
+        Input.SetCustomMouseCursor(image, Input.CursorShape.Arrow, imageCenter);
     }
 
     void OnSetCreateCreatureMode()
@@ -269,7 +285,7 @@ public class World : Spatial
         creatureSpawner.On = true;
         Texture image = GD.Load<Texture>("res://Art/createCreatureCursor.png");
         Vector2 imageCenter = new Vector2(image.GetWidth() / 2, image.GetHeight() / 2);
-        Input.SetCustomMouseCursor(image,Input.CursorShape.Arrow, imageCenter);
+        Input.SetCustomMouseCursor(image, Input.CursorShape.Arrow, imageCenter);
     }
 
     void OnFoodPainterSpawnFood(Vector3 pos)
@@ -310,7 +326,8 @@ public class World : Spatial
     /// Add a Creature to the World.
     public void AddCreature(Creature creature)
     {
-        if (!creature.Initialized){
+        if (!creature.Initialized)
+        {
             GD.Print("ERROR: Creature must be initialized before being added to the World.");
             this.GetTree().Quit();
         }
@@ -318,21 +335,26 @@ public class World : Spatial
         creature.world = this;
         creatures.Add(creature);
         this.AddChild(creature);
+
+        creature.Connect(nameof(Creature.CreatureClicked), this, nameof(OnCreatureClicked));
     }
 
     /// Remove a Creature from the World.
-    public void RemoveCreature(Creature creature){
+    public void RemoveCreature(Creature creature)
+    {
         this.creatures.Remove(creature);
+        creature.Disconnect(nameof(Creature.CreatureClicked),this,nameof(OnCreatureClicked));
     }
 
     /// Returns the Ray projecting from the specified screen position.
     /// The ray is in world space.
     /// The first item in the returned tuple is the origin of the ray, the second item is the direction.
-    public Tuple<Vector3,Vector3> GetRay(Vector2 screenPos){
+    public Tuple<Vector3, Vector3> GetRay(Vector2 screenPos)
+    {
         Camera currentCam = GetViewport().GetCamera();
         Vector3 origin = currentCam.ProjectRayOrigin(screenPos);
         Vector3 direction = currentCam.ProjectRayNormal(screenPos);
-        return new Tuple<Vector3, Vector3>(origin,direction);
+        return new Tuple<Vector3, Vector3>(origin, direction);
     }
 
     /// Project a screen position onto the world's XZ plane.
@@ -341,20 +363,21 @@ public class World : Spatial
         Camera currentCam = GetViewport().GetCamera();
         Plane plane = Plane.PlaneXZ; // XZ plane (XZ plane is at y = 0 by definition)
         var ray = this.GetRay(screenPos);
-        Vector3 worldPos = plane.IntersectRay(ray.Item1,ray.Item2);
+        Vector3 worldPos = plane.IntersectRay(ray.Item1, ray.Item2);
         return worldPos;
     }
 
     /// Returns the Creature that is "under" the specified screen position, or null if there isn't one.
     /// In other words, projects a ray from the screen position and sees which creature it hits.
-    public Creature GetCreatureAtScreenPos(Vector2 screenPos){
+    public Creature GetCreatureAtScreenPos(Vector2 screenPos)
+    {
         Vector3 worldPos = this.ScreenPosToWorldPos(screenPos);
 
         // create a small area at the world pos
         Area area = new Area();
         CollisionShape collisionShape = new CollisionShape();
         BoxShape boxShape = new BoxShape();
-        boxShape.Extents = new Vector3(0.1f,0.1f,0.1f);
+        boxShape.Extents = new Vector3(0.1f, 0.1f, 0.1f);
         collisionShape.Shape = boxShape;
         area.AddChild(collisionShape);
         this.AddChild(area);
@@ -364,11 +387,12 @@ public class World : Spatial
         Creature result = null;
         foreach (var item in area.GetOverlappingBodies())
         {
-            if (item is Creature creature){
+            if (item is Creature creature)
+            {
                 result = creature;
             }
         }
-        
+
         // delete temp area
         this.RemoveChild(area);
         area.QueueFree();

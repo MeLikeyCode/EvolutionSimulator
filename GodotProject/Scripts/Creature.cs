@@ -22,10 +22,23 @@ public class Creature : RigidBody
         get {return initialized_;}
     }
 
+    // Emitted when the Creature is clicked.
+    [Signal]
+    public delegate void CreatureClicked(Creature creature);
+
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
 
+    }
+
+    public override void _InputEvent(Godot.Object camera, InputEvent @event, Vector3 clickPosition, Vector3 clickNormal, int shapeIdx){
+        if (@event is InputEventMouseButton mouseEvent){
+            if (mouseEvent.Pressed && mouseEvent.ButtonIndex == (int)ButtonList.Left){
+                this.EmitSignal(nameof(CreatureClicked),this);
+                this.GetTree().SetInputAsHandled();
+            }
+        }
     }
 
     // Called every frame. 'delta' is the elapsed time since the previous frame.
